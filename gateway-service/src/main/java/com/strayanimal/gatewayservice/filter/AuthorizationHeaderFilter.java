@@ -35,8 +35,11 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             // 스케줄러 API
             "/scheduler/**",
 
+            // 유기동물 관련
+            "/pet/**",
+
             // 맵 관련 정보 서비스
-            "/map/find", "/map/detail/**",
+            "/map/**",
 
             // 동물 병원
             "/hospital/list/**", "/hospital/detail/**", "/hospital/category/**",

@@ -47,4 +47,26 @@ spring:
                 - RewritePath=/scheduler-service/(?<segment>.*), /$\{segment}
                 - AuthorizationHeaderFilter
 
+            - id: pet-service
+              uri: lb://PET-SERVICE
+              # k8s 클러스터 내에서 다른 서비스를 지목하기 위한 DNS 명령 규칙
+              # <service-name>.<namespace>.svc.cluster.local:port 번호
+              #uri: http://user-service.default.svc.cluster.local:8081
+              predicates:
+                - Path=/pet-service/**
+              filters:
+                - RemoveRequestHeader=Cookie
+                - RewritePath=/pet-service/(?<segment>.*), /$\{segment}
+                - AuthorizationHeaderFilter
 
+            - id: map-service
+              uri: lb://MAP-SERVICE
+              # k8s 클러스터 내에서 다른 서비스를 지목하기 위한 DNS 명령 규칙
+              # <service-name>.<namespace>.svc.cluster.local:port 번호
+              #uri: http://user-service.default.svc.cluster.local:8081
+              predicates:
+                - Path=/map-service/**
+              filters:
+                - RemoveRequestHeader=Cookie
+                - RewritePath=/map-service/(?<segment>.*), /$\{segment}
+                - AuthorizationHeaderFilter
