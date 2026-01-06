@@ -6,13 +6,12 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.net.URLDecoder;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -24,62 +23,42 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration}")
     private int expiration;
 
-    @Value("${jwt.secretKeyRt}")
-    private String secretKeyRt;
-
-    @Value("${jwt.expirationRt}")
-    private int expirationRt;
-
-    public String createToken(Long userId) {
+    public String createAnonymousToken(String ip, String userAgent) {
 
         Claims claims = Jwts.claims();
-        claims.put("userId", userId);
+        claims.put("type", "ANONYMOUS");
+        claims.put("clientId", UUID.randomUUID().toString());
+
+        // 선택: IP를 그대로 넣지 말고 해시
+        claims.put("ipHash", DigestUtils.sha256Hex(ip));
 
         Date now = new Date();
 
         return Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
-                // 현재 시간 밀리초에 30분을 더한 시간만큼을 만료시간으로 세팅
                 .setExpiration(new Date(now.getTime() + expiration * 60 * 1000))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
     }
 
-    public String createRefreshToken(String email, String role, Long userId) {
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("role", role);
-        claims.put("userId", userId);
-        Date now = new Date();
+    public TokenUserInfo validateAnonymousToken(String token) {
 
-        return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + expirationRt * 60 * 1000))
-                .signWith(SignatureAlgorithm.HS256, secretKeyRt)
-                .compact();
-    }
-
-    public TokenUserInfo validateAndGetTokenUserInfo(String token)
-            throws Exception {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
 
+        if (!"ANONYMOUS".equals(claims.get("type"))) {
+            throw new RuntimeException("Invalid token type");
+        }
 
         return TokenUserInfo.builder()
-                .userId(Long.valueOf(claims.get("userId", String.class)))
+                .clientId(claims.get("clientId", String.class))
+                .ipHash(claims.get("ipHash", String.class))
                 .build();
     }
 
-    public static String urlEncode(String input) {
-        return URLEncoder.encode(input, StandardCharsets.UTF_8);
-    }
-
-    public static String urlDecode(String input) {
-        return URLDecoder.decode(input, StandardCharsets.UTF_8);
-    }
 
 }

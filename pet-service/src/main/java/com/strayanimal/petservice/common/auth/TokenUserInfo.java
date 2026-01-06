@@ -10,5 +10,7 @@ import lombok.*;
 @Builder
 public class TokenUserInfo {
 
-    private Long userId;
+    private String clientId;
+    private String ipHash;
+
 }

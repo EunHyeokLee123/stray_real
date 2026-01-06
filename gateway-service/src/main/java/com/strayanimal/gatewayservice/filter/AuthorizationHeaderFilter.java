@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -32,31 +33,7 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
 
     private final List<String> allowUrl = Arrays.asList(
 
-            // 스케줄러 API
-            "/scheduler/**",
-
-            // 유기동물 관련
-            "/pet/**",
-
-            // 맵 관련 정보 서비스
-            "/map/**",
-
-            // 동물 병원
-            "/hospital/list/**", "/hospital/detail/**", "/hospital/category/**",
-
-            // 동물 시설 정보들
-            "/culture/**",
-
-            // 축제 관련 API
-            "/api/festivals/**", "/festival-service/api/festivals", "/festival-service/api/festivals/**", "/api/all",
-
-            // 에디터
-            "/editor/upload-image",
-
-
-            // 스웨거
-            "/swagger-ui-cvnlaksdkaweivkjnalsdknl4589dsfnml1234.html",
-            "/swagger-ui/**", "/v3/api-docs", "/v3/api-docs/**", "/swagger-resources/**"
+            "/token/issue"
 
     );
 
@@ -83,37 +60,43 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                     .getHeaders().getFirst("Authorization");
             log.info("authorizationHeader: {}", authorizationHeader);
 
+
+
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-                return onError(exchange, "Authorization header is missing or invalid", HttpStatus.UNAUTHORIZED);
+                return onError(exchange, "TOKEN_REQUIRED", HttpStatus.UNAUTHORIZED);
             }
 
             String token = authorizationHeader.replace("Bearer ", "");
             log.info("token: {}", token);
 
             Claims claims;
-            String roleHeader = "X-User-Role";
-            String adminRoleHeader = "X-Admin-Role";
 
             try {
                 claims = validateJwt(token, secretKey);
             } catch (RuntimeException e) {
-                if (e.getMessage().equals("EXPIRED_TOKEN")) {
-                    return onError(exchange, "EXPIRED_TOKEN", HttpStatus.UNAUTHORIZED);
-                } else if (e.getMessage().equals("INVALID_TOKEN")) {
-                    return onError(exchange, "INVALID_TOKEN", HttpStatus.UNAUTHORIZED);
-                }
-                return onError(exchange, "인증 오류 발생", HttpStatus.UNAUTHORIZED);
+                return onError(exchange, e.getMessage(), HttpStatus.UNAUTHORIZED);
+            }
+
+            // 🔑 토큰 타입 확인
+            String type = claims.get("type", String.class);
+            if (type == null) {
+                return onError(exchange, "INVALID_TOKEN_TYPE", HttpStatus.UNAUTHORIZED);
             }
 
             ServerHttpRequest request;
 
+            if ("ANONYMOUS".equals(type)) {
                 request = exchange.getRequest()
                         .mutate()
-                        .header("X-User-Id", claims.get("userId", String.class))
+                        .header("X-Client-Id", claims.get("clientId", String.class))
                         .build();
 
-            log.info("필터통과됨!!!!");
+            } else {
+                return onError(exchange, "UNKNOWN_TOKEN_TYPE", HttpStatus.UNAUTHORIZED);
+            }
+
             return chain.filter(exchange.mutate().request(request).build());
+
         };
     }
     
