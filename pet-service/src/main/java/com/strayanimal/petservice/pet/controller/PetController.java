@@ -36,7 +36,7 @@ public class PetController {
 
         CommonResDto resDto = petService.getDetail(desertionNo);
 
-        return new ResponseEntity<>(resDto, HttpStatus.FOUND);
+        return new ResponseEntity<>(resDto, HttpStatus.OK);
     }
     
 

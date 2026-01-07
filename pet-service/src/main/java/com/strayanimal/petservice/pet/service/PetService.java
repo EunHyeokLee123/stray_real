@@ -30,7 +30,7 @@ public class PetService {
 
         Pageable pageable = PageRequest.of(
                 page,      // 0부터 시작
-                6          // 페이지당 아이템 수
+                9          // 페이지당 아이템 수
         );
 
         Page<StrayAnimalEntity> result;
@@ -59,7 +59,7 @@ public class PetService {
 
 
     private PetDetailResDto getEntity(String desertionNo) {
-        Optional<StrayAnimalEntity> result = animalsRepository.findById(desertionNo);
+        Optional<StrayAnimalEntity> result = animalsRepository.findByDesertionNo(desertionNo);
         if(result.isPresent()) {
             return new PetDetailResDto(result.get());
         }

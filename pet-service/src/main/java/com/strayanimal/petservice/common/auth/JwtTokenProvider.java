@@ -35,7 +35,7 @@ public class JwtTokenProvider {
                 .claim("ua", DigestUtils.sha256Hex(userAgent))
                 .claim("ip", DigestUtils.sha256Hex(ip))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration * 60 * 1000))
+                .setExpiration(new Date(System.currentTimeMillis() + (long) expiration * 60 * 1000))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
 
