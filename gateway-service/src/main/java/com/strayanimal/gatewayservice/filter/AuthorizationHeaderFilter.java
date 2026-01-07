@@ -28,12 +28,10 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
     @Value("${jwt.secretKey}")
     private String secretKey;
 
-    @Value("${jwt.secretAdminKey}")
-    private String adminKey;
-
     private final List<String> allowUrl = Arrays.asList(
 
-            "/token/issue"
+            "/token/issue",
+            "/scheduler/**"
 
     );
 
@@ -77,25 +75,29 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                 return onError(exchange, e.getMessage(), HttpStatus.UNAUTHORIZED);
             }
 
-            // 🔑 토큰 타입 확인
+            // 4️ 토큰 타입 확인
             String type = claims.get("type", String.class);
-            if (type == null) {
+            if (!"ANONYMOUS".equals(type)) {
                 return onError(exchange, "INVALID_TOKEN_TYPE", HttpStatus.UNAUTHORIZED);
             }
 
-            ServerHttpRequest request;
-
-            if ("ANONYMOUS".equals(type)) {
-                request = exchange.getRequest()
-                        .mutate()
-                        .header("X-Client-Id", claims.get("clientId", String.class))
-                        .build();
-
-            } else {
-                return onError(exchange, "UNKNOWN_TOKEN_TYPE", HttpStatus.UNAUTHORIZED);
+            // 5⃣ clientId 존재 여부만 확인 (의미 검증 )
+            String clientId = claims.get("clientId", String.class);
+            if (clientId == null || clientId.isBlank()) {
+                return onError(exchange, "INVALID_CLIENT_ID", HttpStatus.UNAUTHORIZED);
             }
 
-            return chain.filter(exchange.mutate().request(request).build());
+            // 6️ 내부 서비스로 필요한 정보만 전달
+            ServerHttpRequest mutatedRequest = exchange.getRequest()
+                    .mutate()
+                    .header("X-Client-Id", clientId)
+                    .build();
+
+            log.info("Gateway 통과 - clientId 전달 완료");
+
+            return chain.filter(
+                    exchange.mutate().request(mutatedRequest).build()
+            );
 
         };
     }

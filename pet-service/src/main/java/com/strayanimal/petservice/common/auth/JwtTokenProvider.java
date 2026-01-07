@@ -25,42 +25,19 @@ public class JwtTokenProvider {
     @Value("${jwt.expiration}")
     private int expiration;
 
-    public String createAnonymousToken(String ip, String userAgent) {
+    public String createAnonymousToken(String ip, String userAgent, String fingerprint) {
 
-        Claims claims = Jwts.claims();
-        claims.put("type", "ANONYMOUS");
-        claims.put("clientId", UUID.randomUUID().toString());
-
-        // 선택: IP를 그대로 넣지 말고 해시
-        claims.put("ipHash", DigestUtils.sha256Hex(ip));
-
-        Date now = new Date();
+        String fingerprintHash = DigestUtils.sha256Hex(fingerprint);
 
         return Jwts.builder()
-                .setClaims(claims)
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + expiration * 60 * 1000))
+                .claim("fp", fingerprintHash)
+                .claim("ua", DigestUtils.sha256Hex(userAgent))
+                .claim("ip", DigestUtils.sha256Hex(ip))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
+
     }
-
-    public TokenUserInfo validateAnonymousToken(String token) {
-
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        if (!"ANONYMOUS".equals(claims.get("type"))) {
-            throw new RuntimeException("Invalid token type");
-        }
-
-        return TokenUserInfo.builder()
-                .clientId(claims.get("clientId", String.class))
-                .ipHash(claims.get("ipHash", String.class))
-                .build();
-    }
-
 
 }
