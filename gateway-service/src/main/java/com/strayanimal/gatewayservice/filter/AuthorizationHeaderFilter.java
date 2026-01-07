@@ -59,7 +59,6 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
             log.info("authorizationHeader: {}", authorizationHeader);
 
 
-
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 return onError(exchange, "TOKEN_REQUIRED", HttpStatus.UNAUTHORIZED);
             }
@@ -81,16 +80,16 @@ public class AuthorizationHeaderFilter extends AbstractGatewayFilterFactory {
                 return onError(exchange, "INVALID_TOKEN_TYPE", HttpStatus.UNAUTHORIZED);
             }
 
-            // 5⃣ clientId 존재 여부만 확인 (의미 검증 )
-            String clientId = claims.get("clientId", String.class);
-            if (clientId == null || clientId.isBlank()) {
-                return onError(exchange, "INVALID_CLIENT_ID", HttpStatus.UNAUTHORIZED);
+            // 5 fingerprint hash 확인
+            String fpHash = claims.get("fp", String.class);
+            if (fpHash == null || fpHash.isBlank()) {
+                return onError(exchange, "INVALID_FINGERPRINT", HttpStatus.UNAUTHORIZED);
             }
 
             // 6️ 내부 서비스로 필요한 정보만 전달
             ServerHttpRequest mutatedRequest = exchange.getRequest()
                     .mutate()
-                    .header("X-Client-Id", clientId)
+                    .header("X-Fingerprint-Hash", fpHash)
                     .build();
 
             log.info("Gateway 통과 - clientId 전달 완료");

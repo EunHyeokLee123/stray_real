@@ -30,11 +30,12 @@ public class JwtTokenProvider {
         String fingerprintHash = DigestUtils.sha256Hex(fingerprint);
 
         return Jwts.builder()
+                .claim("type", "ANONYMOUS")
                 .claim("fp", fingerprintHash)
                 .claim("ua", DigestUtils.sha256Hex(userAgent))
                 .claim("ip", DigestUtils.sha256Hex(ip))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration * 60 * 1000))
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
 

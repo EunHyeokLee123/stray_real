@@ -40,6 +40,9 @@ public class PetService {
         else if(searchDto.getRegion().equals("강원도") || searchDto.getRegion().equals("강원특별자치도")) {
             result = animalsRepository.searchList2("강원도", "강원특별자치도", searchDto.getKind(), pageable);
         }
+        else if(searchDto.getRegion().equals("전체")) {
+            result = animalsRepository.searchAll(searchDto.getKind(), pageable);
+        }
         else {
             result = animalsRepository.searchList(searchDto.getRegion(), searchDto.getKind(), pageable);
         }

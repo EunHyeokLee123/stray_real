@@ -14,7 +14,8 @@ public class TokenSecurityService {
 
     private final StringRedisTemplate redisTemplate;
 
-    private static final int LIMIT_PER_MINUTE = 5;
+    // 추후에 횟수는 어느정도로 설정할지 고민하자.
+    private static final int LIMIT_PER_MINUTE = 1000;
 
     public void validateIssueRequest(String ip, String fingerprint) {
 

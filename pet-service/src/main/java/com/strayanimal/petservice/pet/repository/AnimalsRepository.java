@@ -2,6 +2,8 @@ package com.strayanimal.petservice.pet.repository;
 
 import com.strayanimal.petservice.pet.dto.SearchDto;
 import com.strayanimal.petservice.pet.entity.StrayAnimalEntity;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,4 +36,6 @@ public interface AnimalsRepository extends JpaRepository<StrayAnimalEntity, Stri
     Page<StrayAnimalEntity> searchList2(@Param("region1") String region1, @Param("region2") String region2,
                                         @Param("kind") String kind, Pageable pageable);
 
+    @Query("SELECT s FROM StrayAnimalEntity s WHERE s.upKindNm = :kind")
+    Page<StrayAnimalEntity> searchAll(@Param("kind") String kind, Pageable pageable);
 }
