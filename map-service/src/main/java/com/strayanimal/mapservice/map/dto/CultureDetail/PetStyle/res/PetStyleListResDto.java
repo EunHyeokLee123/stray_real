@@ -11,5 +11,7 @@ public class PetStyleListResDto {
     private String roadAddress;  // 도로명주소명
     private String fullAddress;  // 지번주소
     private String facilityName;  // 시설명
+    private double mapx;
+    private double mapy;
 
 }

@@ -64,6 +64,8 @@ public class PetStyle {
                 .facilityName(this.facilityName)
                 .fullAddress(this.fullAddress)
                 .roadAddress(this.roadAddress)
+                .mapx(this.mapx)
+                .mapy(this.mapy)
                 .build();
     }
 
