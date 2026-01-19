@@ -1,5 +1,6 @@
 server:
-  port: 8000
+  # google cloud는 port가 8080 고정임
+  port: 8080
 
 spring:
   application:
