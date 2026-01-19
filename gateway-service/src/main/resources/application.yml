@@ -1,6 +1,7 @@
 server:
   # google cloud는 port가 8080 고정임
-  port: 8080
+  # local 개발이나, 데이터 받아올 때는 8000을 사용하자.
+  port: 8000
 
 spring:
   application:
